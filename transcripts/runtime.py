@@ -136,6 +136,8 @@ class Runtime:
         return {'context':context,'publicKey':b64(self.channel.public_key_der),'attestation':b64(document)}
 
     def dispatch(self,command,body):
+        # A routed POST body is any JSON value; reserve and submit read it as an object.
+        require(isinstance(body,dict),'invalid_fields')
         if command=='health':
             active=True
             try:self.epoch.require_admission()

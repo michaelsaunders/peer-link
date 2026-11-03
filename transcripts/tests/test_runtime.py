@@ -477,6 +477,10 @@ class RuntimeTests(unittest.TestCase):
             self.runtime.operator(self.operator_message(action="reconcile",nonce="c"*64))
             self.assertEqual(worker.call_args.kwargs["target"],self.runtime.reconcile_pending)
             worker.return_value.start.assert_called_once()
+    def test_non_object_bodies_are_invalid_fields(self):
+        for command in ('reserve','submit'):
+            for body in ([],'x',1,None):
+                with self.assertRaisesRegex(Rejected,'^invalid_fields$'):self.runtime.dispatch(command,body)
     def test_reservation_unfunded_and_wrong_policy_fail_before_inference(self):
         self.epoch.pause()
         with self.assertRaisesRegex(Rejected,"payout_paused"):self.runtime.dispatch("reserve",request(self.policy["campaigns"][0]))
