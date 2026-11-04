@@ -217,7 +217,7 @@ class Runtime:
     def operator(self,body):
         fields(body,{'payload','signature'});value=body['payload']
         fields(value,{'action','epochId','wallet','nonce','expiresAt'})
-        require(value['action'] in {'activate','pause','resume','reconcile','retire','preflight'},'invalid_operator_action')
+        require(isinstance(value['action'],str) and value['action'] in {'activate','pause','resume','reconcile','retire','preflight'},'invalid_operator_action')
         require(value['epochId']==self.epoch.epoch_id and value['wallet']==self.epoch.wallet,'epoch_binding_mismatch')
         require(type(value['expiresAt']) is int and time.time()<value['expiresAt']<=time.time()+120,'operator_expired')
         require(isinstance(value['nonce'],str) and len(value['nonce'])==64,'invalid_nonce')
