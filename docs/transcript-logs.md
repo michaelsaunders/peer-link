@@ -50,8 +50,10 @@ not read.
 
 `egress` events, one per outbound connection the enclave opens through the relay:
 `target`, `outcome` (`closed`, `idle`, `denied`, `unavailable`, `limit`, `error`),
-`ms` and `bytes`. `target` is a fixed service host, a named model provider, or the
-campaign's bank domain; a contributor's own model endpoint is logged as `other`.
+`ms` and `bytes`. `idle` means 30 seconds passed with no bytes either way; a
+connection that fails mid-stream, such as on a reset, is `error`. `target` is a
+fixed service host, a named model provider, or the campaign's bank domain; a
+contributor's own model endpoint is logged as `other`.
 
 `health` events, one a minute from the health publisher's localhost probe on a
 continuous host: `RuntimeHealth` and `AdmissionsOpen`, each `0` or `1`, the same

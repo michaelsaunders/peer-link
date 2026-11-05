@@ -127,10 +127,10 @@ def egress_connection(conn,allowed,public=False,policy=None):
         outcome='unavailable'
         with connect_public(request['host']) as upstream:
             conn.sendall(b'OK\n');conn.settimeout(30)
-            outcome='idle'
+            outcome='error'
             while True:
                 ready,_,_=select.select([conn,upstream],[],[],30)
-                if not ready:break
+                if not ready:outcome='idle';break
                 for source in ready:
                     data=source.recv(65536)
                     if not data:outcome='closed';return

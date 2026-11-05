@@ -3,6 +3,8 @@ import base64
 import gzip
 import io
 import json
+import socket
+import struct
 import time
 import unittest
 from contextlib import redirect_stdout
@@ -10,7 +12,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from transcripts.infra import axiom_forwarder, health_publisher, log_shipper, logs_template
-from transcripts.server import egress_target, emit, request_event
+from transcripts.server import egress_connection, egress_target, emit, request_event
 
 JOB = "a" * 32
 PAYOUT = "0x" + "1" * 40
@@ -79,6 +81,25 @@ class RelayEventTests(unittest.TestCase):
         # A contributor's own model endpoint or a look-alike host is never named.
         for host in ("llm.private.example", "evilexamplebank.com", "examplebank.com.evil.test", None, 5):
             self.assertIn(egress_target(host, POLICY), {"other", "invalid"})
+
+    def test_egress_reset_is_an_error_not_idle(self):
+        # `idle` is the 30 second quiet timeout; a bridge torn down by a reset is not idle.
+        for reset, outcome in ((False, "closed"), (True, "error")):
+            with self.subTest(reset=reset):
+                with socket.create_server(("127.0.0.1", 0)) as server:
+                    upstream = socket.create_connection(server.getsockname())
+                    bank, _ = server.accept()
+                if reset:
+                    bank.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
+                bank.close()
+                enclave, relay = socket.socketpair()
+                enclave.sendall(b'{"host":"api.examplebank.com","port":443}\n')
+                output = io.StringIO()
+                with patch("transcripts.server.connect_public", return_value=upstream), redirect_stdout(output):
+                    egress_connection(relay, {"api.examplebank.com"}, policy=POLICY)
+                enclave.close()
+                event = json.loads(output.getvalue())
+                self.assertEqual((event["target"], event["outcome"], event["bytes"]), ("examplebank.com", outcome, 0))
 
     def test_emit_writes_one_json_line(self):
         output = io.StringIO()
