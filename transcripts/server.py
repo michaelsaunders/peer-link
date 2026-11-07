@@ -23,7 +23,7 @@ PUBLIC_POST={'/v1/reservations':'reserve','/v1/challenges':'challenge','/v1/subm
 # host chosen by a contributor. The host log shipper forwards these lines unchanged.
 SAFE={'jobId':re.compile(r'[0-9a-f]{32}'),'campaignId':re.compile(r'[a-z0-9][a-z0-9-]{0,63}'),
       'state':re.compile(r'[a-z_]{1,32}'),'reportedState':re.compile(r'[a-z_]{1,32}'),
-      'reason':re.compile(r'[a-z0-9_]{1,64}'),'error':re.compile(r'[a-z0-9_]{1,64}'),
+      'reason':re.compile(r'[A-Za-z0-9_]{1,64}'),'error':re.compile(r'[a-z0-9_]{1,64}'),
       'provider':re.compile(r'[a-z_]{1,32}'),'model':re.compile(r'[A-Za-z0-9._:/@-]{1,100}'),
       'transactionId':re.compile(r'0x[0-9a-f]{64}'),'action':re.compile(r'[a-z]{1,16}')}
 PROVIDER_HOSTS={'api.openai.com':'openai','openrouter.ai':'openrouter','cloud-api.near.ai':'near'}

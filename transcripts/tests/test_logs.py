@@ -12,6 +12,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from transcripts.infra import axiom_forwarder, health_publisher, log_shipper, logs_template
+from transcripts.ledger import REASONS
 from transcripts.server import egress_connection, egress_target, emit, request_event
 
 JOB = "a" * 32
@@ -55,6 +56,12 @@ class RelayEventTests(unittest.TestCase):
         self.assertEqual((paid["state"], paid["transactionId"]), ("paid", TX))
         self.assertNotIn(CIPHER, json.dumps(paid))
         self.assertNotIn(PAYOUT, json.dumps(paid))
+
+    def test_every_job_reason_reaches_the_status_event(self):
+        for reason in sorted(REASONS):
+            status = {"jobId": JOB, "campaignId": "examplebank-open-v1", "state": "rejected", "reason": reason}
+            event = self.event({"command": "status", "body": {"jobId": JOB}}, {}, status, method="GET")
+            self.assertEqual(event.get("reason"), reason)
 
     def test_values_that_do_not_fit_their_public_pattern_are_dropped(self):
         result = {"jobId": "not-a-job", "state": "Paid With Spaces", "reason": "x" * 80, "error": "has space"}
